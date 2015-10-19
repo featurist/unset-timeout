@@ -1,0 +1,24 @@
+{
+  "name": "unset-timeout",
+  "version": "1.0.0",
+  "description": "resets any setTimeout or setInterval between mocha tests",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "setTimeout",
+    "mocha",
+    "test"
+  ],
+  "author": "Tim Macfarlane <timmacfarlane@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/featurist/unset-timeout.git"
+  },
+  "bugs": {
+    "url": "https://github.com/featurist/unset-timeout/issues"
+  },
+  "homepage": "https://github.com/featurist/unset-timeout"
+}
