@@ -1,3 +1,4 @@
+var retry = require('trytryagain');
 var originalSetTimeout = window.setTimeout;
 var originalClearTimeout = window.clearTimeout;
 var originalSetInterval = window.setInterval;
@@ -15,17 +16,17 @@ beforeEach(function () {
 });
 
 afterEach(function () {
-  return new Promise(function(success){
-    var interval = originalSetInterval(function(){
-      if(unsetTimeout.timeouts === 0 && unsetTimeout.intervals === 0) {
-        originalClearInterval(interval);
-        window.setTimeout = originalSetTimeout;
-        window.clearTimeout = originalClearTimeout;
-        window.setInterval = originalSetInterval;
-        window.clearInterval = originalClearInterval;
-        success();
-      }
-    }, 10);
+  return retry(function() {
+    if(unsetTimeout.timeouts > 0 || unsetTimeout.intervals > 0) {
+      var error = new Error('This has test has started at least one delayed function that is yet to complete');
+      error.pendingTimeouts = unsetTimeout.timeouts;
+      error.pendingIntervals = unsetTimeout.intervals;
+      throw error;
+    }
+    window.setTimeout = originalSetTimeout;
+    window.clearTimeout = originalClearTimeout;
+    window.setInterval = originalSetInterval;
+    window.clearInterval = originalClearInterval;
   });
 });
 
@@ -46,13 +47,11 @@ function clearTimeout(id) {
 function setInterval(fn, ms) {
   unsetTimeout.intervals++;
 
-  return originalSetInterval(function () {
-    unsetTimeout.intervals--;
-    fn();
-  }, ms);
+  return originalSetInterval(fn, ms);
 }
 
 function clearInterval(id) {
   unsetTimeout.intervals--;
   originalClearInterval(id);
 }
+
