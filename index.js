@@ -4,10 +4,6 @@ var originalSetInterval = window.setInterval;
 var originalClearInterval = window.clearInterval;
 
 beforeEach(function () {
-  window.unsetTimeout = {
-    timeouts: 0,
-    intervals: 0
-  };
   window.setTimeout = setTimeout;
   window.clearTimeout = clearTimeout;
   window.setInterval = setInterval;
@@ -17,7 +13,8 @@ beforeEach(function () {
 afterEach(function () {
   return new Promise(function(success){
     var interval = originalSetInterval(function(){
-      if(unsetTimeout.timeouts === 0 && unsetTimeout.intervals === 0) {
+
+      if(Object.keys(timeouts).length === 0 && Object.keys(intervals).length === 0) {
         originalClearInterval(interval);
         window.setTimeout = originalSetTimeout;
         window.clearTimeout = originalClearTimeout;
@@ -29,30 +26,37 @@ afterEach(function () {
   });
 });
 
-function setTimeout(fn, ms) {
-  unsetTimeout.timeouts++;
+var timeouts = {};
+var intervals = {};
 
-  return originalSetTimeout(function () {
-    unsetTimeout.timeouts--;
+function setTimeout(fn, ms) {
+  var id = originalSetTimeout(function () {
+    delete timeouts[id];
     fn();
   }, ms);
+
+  timeouts[id] = ms;
+
+  return id;
 }
 
 function clearTimeout(id) {
-  unsetTimeout.timeouts--;
+  delete timeouts[id];
   originalClearTimeout(id);
 }
 
 function setInterval(fn, ms) {
-  unsetTimeout.intervals++;
-
-  return originalSetInterval(function () {
-    unsetTimeout.intervals--;
+  var id = originalSetInterval(function () {
+    delete intervals[id];
     fn();
   }, ms);
+
+  intervals[id] = ms;
+
+  return id;
 }
 
 function clearInterval(id) {
-  unsetTimeout.intervals--;
+  delete intervals[id];
   originalClearInterval(id);
 }
