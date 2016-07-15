@@ -1,3 +1,5 @@
+var retry = require('trytryagain');
+
 var originalSetTimeout = window.setTimeout;
 var originalClearTimeout = window.clearTimeout;
 var originalSetInterval = window.setInterval;
@@ -11,18 +13,15 @@ beforeEach(function () {
 });
 
 afterEach(function () {
-  return new Promise(function(success){
-    var interval = originalSetInterval(function(){
-
-      if(Object.keys(timeouts).length === 0 && Object.keys(intervals).length === 0) {
-        originalClearInterval(interval);
-        window.setTimeout = originalSetTimeout;
-        window.clearTimeout = originalClearTimeout;
-        window.setInterval = originalSetInterval;
-        window.clearInterval = originalClearInterval;
-        success();
-      }
-    }, 10);
+  return retry(function () {
+    if (Object.keys(timeouts).length !== 0 || Object.keys(intervals).length !== 0) {
+      throw new Error('still waiting for setTimeouts to fire');
+    }
+  }).then(function () {
+    window.setTimeout = originalSetTimeout;
+    window.clearTimeout = originalClearTimeout;
+    window.setInterval = originalSetInterval;
+    window.clearInterval = originalClearInterval;
   });
 });
 

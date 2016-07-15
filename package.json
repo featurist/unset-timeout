@@ -20,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/featurist/unset-timeout/issues"
   },
-  "homepage": "https://github.com/featurist/unset-timeout"
+  "homepage": "https://github.com/featurist/unset-timeout",
+  "dependencies": {
+    "trytryagain": "1.2.0"
+  }
 }
