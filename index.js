@@ -1,9 +1,9 @@
 var unset = require('./unset');
 
 beforeEach(function () {
-  unset.capture();
+  unset.set();
 });
 
 afterEach(function () {
-  return unset.verify();
+  unset.unset();
 });
