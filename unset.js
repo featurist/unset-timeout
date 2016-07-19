@@ -1,69 +1,40 @@
 var window = require('global');
-var retry = require('trytryagain');
-var PendingOperationsError = require('./pendingOperationsError');
 
 var originalSetTimeout = window.setTimeout;
-var originalClearTimeout = window.clearTimeout;
 var originalSetInterval = window.setInterval;
-var originalClearInterval = window.clearInterval;
 
-module.exports.capture = function () {
+var timeouts = [];
+var intervals = [];
+
+module.exports.set = function () {
   window.setTimeout = setTimeout;
-  window.clearTimeout = clearTimeout;
   window.setInterval = setInterval;
-  window.clearInterval = clearInterval;
 };
 
-module.exports.verify = function (options) {
-  var timeout = options && options.timeout || 1000;
-  return retry(function () {
-    if (Object.keys(timeouts).length !== 0 || Object.keys(intervals).length !== 0) {
-      throw new PendingOperationsError(
-        'still waiting for setTimeouts to fire',
-        Object.keys(timeouts).map(key => timeouts[key]),
-        Object.keys(intervals).map(key => intervals[key])
-      );
-    }
-  }, {
-    timeout: timeout
-  }).then(function () {
-    window.setTimeout = originalSetTimeout;
-    window.clearTimeout = originalClearTimeout;
-    window.setInterval = originalSetInterval;
-    window.clearInterval = originalClearInterval;
-  });
-};
+module.exports.unset = function (options) {
+  for(var t = 0; t < timeouts.length; t++) {
+    clearTimeout(timeouts[t]);
+  }
+  for(var i = 0; i < intervals.length; i++) {
+    clearInterval(intervals[i]);
+  }
 
-var timeouts = {};
-var intervals = {};
+  window.setTimeout = originalSetTimeout;
+  window.setInterval = originalSetInterval;
+};
 
 function setTimeout(fn, ms) {
-  var id = originalSetTimeout(function () {
-    delete timeouts[id];
-    fn();
-  }, ms);
+  var id = originalSetTimeout(fn, ms);
 
-  timeouts[id] = new Error().stack;
+  timeouts.push(id);
 
   return id;
-}
-
-function clearTimeout(id) {
-  delete timeouts[id];
-  originalClearTimeout(id);
 }
 
 function setInterval(fn, ms) {
-  var id = originalSetInterval(function () {
-    fn();
-  }, ms);
+  var id = originalSetInterval(fn, ms);
 
-  intervals[id] = new Error().stack;
+  intervals.push(id);
 
   return id;
-}
-
-function clearInterval(id) {
-  delete intervals[id];
-  originalClearInterval(id);
 }
